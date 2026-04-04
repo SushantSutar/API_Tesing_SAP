@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Calculation:scenario xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:Calculation="http://www.sap.com/ndb/BiModelCalculation.ecore" id="WEB_T_DUMMYVIEW" applyPrivilegeType="NONE" dataCategory="DIMENSION" dimensionType="STANDARD" schemaVersion="3.0" hierarchyGeneration="SQL" outputViewType="Projection" cacheInvalidationPeriod="NONE" enforceSqlExecution="true" application="BAS">
+<descriptions defaultDescription="WEB_T_DUMMY"/>
+<localVariables/>
+<variableMappings/>
+<dataSources>
+  <DataSource id="WEB_T_DUMMY">
+    <resourceUri>WEB_T_DUMMY</resourceUri>
+  </DataSource>
+</dataSources>
+<snapshotProcedures/>
+<calculationViews>
+  <calculationView xsi:type="Calculation:ProjectionView" id="Projection_1">
+    <viewAttributes>
+      <viewAttribute id="DUMID"/>
+      <viewAttribute id="DUMMY"/>
+      <viewAttribute id="FYNAM"/>
+      <viewAttribute id="LSNAM"/>
+    </viewAttributes>
+    <calculatedViewAttributes/>
+    <input node="WEB_T_DUMMY"/>
+  </calculationView>
+</calculationViews>
+
+<logicalModel id="Projection_1">
+  <attributes>
+    <attribute id="DUMID" order="1" displayAttribute="false" attributeHierarchyActive="false">
+      <descriptions defaultDescription="Dummy id"/>
+      <keyMapping columnObjectName="Projection_1" columnName="DUMID"/>
+    </attribute>
+    <attribute id="DUMMY" order="2" displayAttribute="false" attributeHierarchyActive="false">
+      <descriptions defaultDescription="Dummy Data"/>
+      <keyMapping columnObjectName="Projection_1" columnName="DUMMY"/>
+    </attribute>
+    <attribute id="FYNAM" order="3" displayAttribute="false" attributeHierarchyActive="false">
+      <descriptions defaultDescription="Dummy First name"/>
+      <keyMapping columnObjectName="Projection_1" columnName="FYNAM"/>
+    </attribute>
+    <attribute id="LSNAM" order="4" displayAttribute="false" attributeHierarchyActive="false">
+      <descriptions defaultDescription="Dummy Last name"/>
+      <keyMapping columnObjectName="Projection_1" columnName="LSNAM"/>
+    </attribute>
+  </attributes>
+  <calculatedAttributes/>
+  <baseMeasures/>
+  <calculatedMeasures/>
+  <restrictedMeasures/>
+</logicalModel>
+<layout>
+  <shapes>
+    <shape expanded="true" modelObjectName="Output" modelObjectNameSpace="MeasureGroup">
+      <upperLeftCorner x="40" y="85"/>
+    </shape>
+    
+  
+    <shape expanded="true" modelObjectName="Projection_1" modelObjectNameSpace="CalculationView">
+      <upperLeftCorner x="100" y="207"/>
+      <rectangleSize height="30" width="160"/>
+    </shape>
+  </shapes>
+</layout>
+</Calculation:scenario>

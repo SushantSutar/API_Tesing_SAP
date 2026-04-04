@@ -1,0 +1,13 @@
+COLUMN TABLE WEB_T_DUMMY (
+    DUMID INTEGER COMMENT 'Dummy id',
+    DUMMY NVARCHAR(50) COMMENT 'Dummy Data',
+    FYNAM NVARCHAR(50) COMMENT 'Dummy First name',
+    LSNAM NVARCHAR(50) COMMENT 'Dummy Last name',
+    ISDEL NVARCHAR(1) COMMENT 'Is Deleted Flag (1=True/0=False)',
+    CRTBY NVARCHAR(100) COMMENT 'Created By',
+    CRTDT DATE COMMENT 'Created Date',
+    CRTTM TIME COMMENT 'Created Time',
+    CHNBY NVARCHAR(100) COMMENT 'Changed By',
+    CHNDT DATE COMMENT 'Changed Date',
+    CHNTM TIME COMMENT 'Changed Time'
+);

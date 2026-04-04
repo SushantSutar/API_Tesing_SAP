@@ -1,0 +1,14 @@
+{
+    "DUMMY": {
+      "target": {
+        "object": "DUMMY",
+        "schema": "SYS"
+      }
+    },
+    "TABLE_COLUMNS": {
+      "target": {
+        "object": "TABLE_COLUMNS",
+        "schema": "SYS"
+      }
+    }
+  }

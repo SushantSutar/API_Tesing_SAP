@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Calculation:scenario xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:Calculation="http://www.sap.com/ndb/BiModelCalculation.ecore" id="WEB_T_COUNTLOG" applyPrivilegeType="NONE" dataCategory="DIMENSION" dimensionType="STANDARD" schemaVersion="3.0" hierarchyGeneration="SQL" outputViewType="Projection" cacheInvalidationPeriod="NONE" enforceSqlExecution="true" application="BAS">
+<descriptions defaultDescription="WEB_T_COUNTLOG"/>
+<localVariables/>
+<variableMappings/>
+<dataSources>
+  <DataSource id="WEB_T_LOGS">
+    <resourceUri>WEB_T_LOGS</resourceUri>
+  </DataSource>
+</dataSources>
+<snapshotProcedures/>
+<calculationViews>
+  <calculationView xsi:type="Calculation:ProjectionView" id="Projection_1">
+    <viewAttributes>
+      <viewAttribute id="WEBID"/>
+      <viewAttribute id="WENCT"/>
+      <viewAttribute id="CHNBY"/>
+      <viewAttribute id="CHNDT"/>
+      <viewAttribute id="IPADD"/>
+      <viewAttribute id="REQCT"/>
+      <viewAttribute id="REQDT"/>
+    </viewAttributes>
+    <calculatedViewAttributes/>
+    <input node="WEB_T_LOGS"/>
+  </calculationView>
+</calculationViews>
+
+<logicalModel id="Projection_1">
+  <attributes>
+    <attribute id="WEBID" order="1" displayAttribute="false" attributeHierarchyActive="false">
+      <descriptions defaultDescription="WEBID"/>
+      <keyMapping columnObjectName="Projection_1" columnName="WEBID"/>
+    </attribute>
+    <attribute id="WENCT" order="2" displayAttribute="false" attributeHierarchyActive="false">
+      <descriptions defaultDescription="WENCT"/>
+      <keyMapping columnObjectName="Projection_1" columnName="WENCT"/>
+    </attribute>
+    <attribute id="CHNBY" order="3" displayAttribute="false" attributeHierarchyActive="false">
+      <descriptions defaultDescription="CHNBY"/>
+      <keyMapping columnObjectName="Projection_1" columnName="CHNBY"/>
+    </attribute>
+    <attribute id="CHNDT" order="4" displayAttribute="false" attributeHierarchyActive="false">
+      <descriptions defaultDescription="CHNDT"/>
+      <keyMapping columnObjectName="Projection_1" columnName="CHNDT"/>
+    </attribute>
+    <attribute id="IPADD" order="5" displayAttribute="false" attributeHierarchyActive="false">
+      <descriptions defaultDescription="IPADD"/>
+      <keyMapping columnObjectName="Projection_1" columnName="IPADD"/>
+    </attribute>
+    <attribute id="REQCT" order="6" displayAttribute="false" attributeHierarchyActive="false">
+      <descriptions defaultDescription="REQCT"/>
+      <keyMapping columnObjectName="Projection_1" columnName="REQCT"/>
+    </attribute>
+    <attribute id="REQDT" order="7" displayAttribute="false" attributeHierarchyActive="false">
+      <descriptions defaultDescription="REQDT"/>
+      <keyMapping columnObjectName="Projection_1" columnName="REQDT"/>
+    </attribute>
+  </attributes>
+  <calculatedAttributes/>
+  <baseMeasures/>
+  <calculatedMeasures/>
+  <restrictedMeasures/>
+</logicalModel>
+<layout>
+  <shapes>
+    <shape expanded="true" modelObjectName="Output" modelObjectNameSpace="MeasureGroup">
+      <upperLeftCorner x="40" y="85"/>
+    </shape>
+    
+  
+    <shape expanded="true" modelObjectName="Projection_1" modelObjectNameSpace="CalculationView">
+      <upperLeftCorner x="100" y="222"/>
+      <rectangleSize height="30" width="160"/>
+    </shape>
+  </shapes>
+</layout>
+</Calculation:scenario>

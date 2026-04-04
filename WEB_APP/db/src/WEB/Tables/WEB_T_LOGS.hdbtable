@@ -1,0 +1,16 @@
+COLUMN TABLE WEB_T_LOGS (
+    WEBID INTEGER COMMENT 'web ID',
+    WENCT NVARCHAR(50) COMMENT 'WEB Unqid',
+    IPADD NVARCHAR(45) COMMENT 'IP address',
+    ENDPO NVARCHAR(255) COMMENT 'Endpoint',
+    REQDT DATE COMMENT 'requested date',
+    REQCT INTEGER COMMENT 'web count',
+    ISDEL NVARCHAR(1) COMMENT 'Is Deleted Flag (1=True/0=False)',
+    CRTBY NVARCHAR(100) COMMENT 'Created By',
+    CRTDT DATE COMMENT 'Created Date',
+    CRTTM TIME COMMENT 'Created Time',
+    CHNBY NVARCHAR(100) COMMENT 'Changed By',
+    CHNDT DATE COMMENT 'Changed Date',
+    CHNTM TIME COMMENT 'Changed Time'
+
+);

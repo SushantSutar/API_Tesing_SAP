@@ -1,0 +1,108 @@
+body {
+  font-family: Arial;
+  background: #eef2f7;
+  padding: 20px;
+}
+
+h1 {
+  text-align: center;
+  color: #333;
+}
+
+.card {
+  background: white;
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+input {
+  padding: 10px;
+  margin: 8px;
+  width: 260px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+}
+
+button {
+  padding: 10px 20px;
+  background: #007bff;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  margin-top: 10px;
+}
+
+button:hover {
+  background: #0056b3;
+}
+
+.download-btn {
+  display: block;
+  margin: 20px auto;
+  background: #28a745;
+}
+
+.progress {
+  width: 100%;
+  background: #ddd;
+  height: 20px;
+  border-radius: 10px;
+  margin-top: 10px;
+}
+
+.progress-bar {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, #28a745, #00c853);
+  border-radius: 10px;
+}
+
+.summary-box {
+  display: flex;
+  justify-content: space-around;
+  margin-top: 10px;
+}
+
+.summary-item {
+  padding: 10px;
+  border-radius: 8px;
+  color: white;
+  width: 120px;
+  text-align: center;
+}
+
+.total { background: #6c757d; }
+.pass { background: #28a745; }
+.fail { background: #dc3545; }
+.error { background: #ffc107; color: black; }
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 20px;
+  background: white;
+}
+
+th {
+  background: #007bff;
+  color: white;
+}
+
+th, td {
+  padding: 12px;
+  border: 1px solid #ddd;
+  text-align: center;
+}
+
+.pass-text { color: green; font-weight: bold; }
+.fail-text { color: red; font-weight: bold; }
+.error-text { color: orange; font-weight: bold; }
+
+tr:hover {
+  background: #f1f1f1;
+}
+

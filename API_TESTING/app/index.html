@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>API Testing Dashboard</title>
+  <style>
+    body {
+      font-family: Arial;
+      background: #f4f6f9;
+      padding: 20px;
+    }
+
+    h1 {
+      text-align: center;
+    }
+
+    .card {
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      margin-bottom: 20px;
+    }
+
+    input, button {
+      padding: 10px;
+      margin: 5px;
+      width: 250px;
+    }
+
+    button {
+      background: #007bff;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+
+    .progress {
+      width: 100%;
+      background: #ddd;
+      height: 20px;
+      border-radius: 10px;
+      margin-top: 10px;
+    }
+
+    .progress-bar {
+      height: 100%;
+      width: 0%;
+      background: green;
+      border-radius: 10px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+      background: white;
+    }
+
+    th, td {
+      border: 1px solid #ccc;
+      padding: 10px;
+    }
+
+    .pass { color: green; font-weight: bold; }
+    .fail { color: red; font-weight: bold; }
+    .error { color: orange; font-weight: bold; }
+  </style>
+</head>
+<body>
+
+<h1>API Testing Dashboard 🚀</h1>
+
+<div class="card">
+  <input type="file" id="file"><br>
+
+  <input type="text" id="clientId" placeholder="Client ID">
+  <input type="text" id="clientSecret" placeholder="Client Secret"><br>
+
+  <input type="text" id="tokenUrl" placeholder="Token URL"><br>
+
+  <button onclick="upload()">Run Tests</button>
+
+  <div class="progress">
+    <div class="progress-bar" id="progressBar"></div>
+  </div>
+</div>
+
+<div id="summary"></div>
+<div id="report"></div>
+
+<button onclick="downloadReport()">Download Report</button>
+
+<script>
+let latestResults = [];
+
+async function upload() {
+    const file = document.getElementById('file').files[0];
+    const progressBar = document.getElementById('progressBar');
+
+    if (!file) {
+        alert("Please upload Excel file");
+        return;
+    }
+
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("clientId", clientId.value);
+    formData.append("clientSecret", clientSecret.value);
+    formData.append("tokenUrl", tokenUrl.value);
+
+    progressBar.style.width = "30%";
+
+    const res = await fetch('/api/runTests', {
+        method: "POST",
+        body: formData
+    });
+
+    progressBar.style.width = "70%";
+
+    const data = await res.json();
+    latestResults = data.results || [];
+
+    progressBar.style.width = "100%";
+
+    renderSummary(data);
+    renderTable(latestResults);
+}
+
+function renderSummary(data) {
+    document.getElementById("summary").innerHTML = `
+        <div class="card">
+            <h3>Summary</h3>
+            <p>Total: ${data.total}</p>
+            <p style="color:green;">Passed: ${data.passed}</p>
+            <p style="color:red;">Failed: ${data.failed}</p>
+            <p style="color:orange;">Errors: ${data.errors}</p>
+        </div>
+    `;
+}
+
+function renderTable(results) {
+    let html = `<table>
+    <tr>
+      <th>Test</th>
+      <th>Status</th>
+      <th>Actual</th>
+      <th>Expected</th>
+      <th>Time</th>
+    </tr>`;
+
+    results.forEach(r => {
+        html += `<tr>
+            <td>${r.testName}</td>
+            <td class="${r.status === 'PASS' ? 'pass' : r.status === 'FAIL' ? 'fail' : 'error'}">${r.status}</td>
+            <td>${r.actual ?? '-'}</td>
+            <td>${r.expected ?? '-'}</td>
+            <td>${r.time ? r.time + ' ms' : '-'}</td>
+        </tr>`;
+    });
+
+    html += "</table>";
+    document.getElementById("report").innerHTML = html;
+}
+
+function downloadReport() {
+    let blob = new Blob([JSON.stringify(latestResults, null, 2)], {type: "application/json"});
+    let a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "report.json";
+    a.click();
+}
+</script>
+
+</body>
+</html>
+
