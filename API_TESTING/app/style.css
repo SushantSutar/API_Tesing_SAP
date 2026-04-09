@@ -1,108 +1,172 @@
+* {
+  box-sizing: border-box;
+}
 body {
-  font-family: Arial;
+  font-family: 'Segoe UI', Arial, sans-serif;
   background: #eef2f7;
   padding: 20px;
-}
-
-h1 {
-  text-align: center;
+  margin: 0;
   color: #333;
 }
-
+h1 {
+  text-align: center;
+  color: #222;
+  margin-bottom: 30px;
+}
 .card {
   background: white;
-  padding: 20px;
+  padding: 25px;
   border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+  margin-bottom: 25px;
+}
+.input-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
   margin-bottom: 20px;
-  text-align: center;
 }
-
-input {
-  padding: 10px;
-  margin: 8px;
-  width: 260px;
-  border-radius: 6px;
+input, button {
+  padding: 12px 15px;
+  border-radius: 8px;
   border: 1px solid #ccc;
+  font-size: 14px;
 }
-
+input {
+  flex: 1;
+  min-width: 220px;
+}
 button {
-  padding: 10px 20px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.3s;
+}
+.btn-primary {
   background: #007bff;
   color: white;
   border: none;
-  border-radius: 6px;
-  cursor: pointer;
-  margin-top: 10px;
 }
-
-button:hover {
-  background: #0056b3;
-}
-
-.download-btn {
-  display: block;
-  margin: 20px auto;
-  background: #28a745;
-}
-
+.btn-primary:hover { background: #0056b3; }
+.btn-success { background: #28a745; color: white; border: none; }
+.btn-success:hover { background: #218838; }
+.btn-info { background: #17a2b8; color: white; border: none; }
+.btn-info:hover { background: #138496; }
+/* Progress Bar */
 .progress {
   width: 100%;
-  background: #ddd;
-  height: 20px;
-  border-radius: 10px;
-  margin-top: 10px;
+  background: #e9ecef;
+  height: 24px;
+  border-radius: 12px;
+  overflow: hidden;
+  margin-top: 15px;
 }
-
 .progress-bar {
   height: 100%;
   width: 0%;
   background: linear-gradient(90deg, #28a745, #00c853);
-  border-radius: 10px;
+  transition: width 0.4s ease;
 }
-
+/* Tabs */
+.tab-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 15px 0;
+}
+.tab {
+  padding: 12px 20px;
+  background: #f1f3f6;
+  border: 2px solid transparent;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 500;
+  white-space: nowrap;
+  transition: all 0.2s;
+}
+.tab:hover {
+  background: #e2e6ea;
+}
+.tab.active {
+  background: #007bff;
+  color: white;
+  border-color: #007bff;
+}
+/* Summary Boxes */
 .summary-box {
   display: flex;
   justify-content: space-around;
-  margin-top: 10px;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin: 15px 0;
 }
-
 .summary-item {
-  padding: 10px;
-  border-radius: 8px;
+  padding: 16px 20px;
+  border-radius: 10px;
   color: white;
-  width: 120px;
   text-align: center;
+  min-width: 120px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  flex: 1;
 }
-
+.summary-item strong {
+  display: block;
+  font-size: 1.8rem;
+  margin-top: 4px;
+}
 .total { background: #6c757d; }
-.pass { background: #28a745; }
-.fail { background: #dc3545; }
-.error { background: #ffc107; color: black; }
-
+.pass  { background: #28a745; }
+.fail  { background: #dc3545; }
+.error { background: #ffc107; color: #212529; }
+/* Table */
 table {
   width: 100%;
   border-collapse: collapse;
-  margin-top: 20px;
   background: white;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+  margin-top: 10px;
 }
-
 th {
   background: #007bff;
   color: white;
+  padding: 14px 12px;
+  text-align: center;
 }
-
-th, td {
+td {
   padding: 12px;
   border: 1px solid #ddd;
   text-align: center;
+  vertical-align: middle;
 }
-
-.pass-text { color: green; font-weight: bold; }
-.fail-text { color: red; font-weight: bold; }
-.error-text { color: orange; font-weight: bold; }
-
 tr:hover {
-  background: #f1f1f1;
+  background: #f8f9fa;
 }
-
+.pass-text { color: #28a745; font-weight: bold; }
+.fail-text { color: #dc3545; font-weight: bold; }
+.error-text { color: #fd7e14; font-weight: bold; }
+.response-btn {
+  padding: 6px 12px;
+  font-size: 13px;
+  background: #6c757d;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+.response-btn:hover {
+  background: #5a6268;
+}
+/* Download Section */
+.download-group {
+  text-align: center;
+  margin-top: 30px;
+}
+.download-group button {
+  margin: 6px;
+}
+/* No Data Message */
+.no-data {
+  text-align: center;
+  padding: 60px 20px;
+  color: #666;
+  font-style: italic;
+}

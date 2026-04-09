@@ -1,0 +1,404 @@
+Got it—you already have your SAP BTP project locally and a Git repo created. Now you just need to connect them and push your code.
+
+Here’s the clean step-by-step:
+
+---
+
+## ✅ 1. Go to your project folder (you already are)
+
+```bash
+cd /home/user/projects/API_TESTING
+```
+
+---
+
+## ✅ 2. Initialize Git (only if not already done)
+
+Check:
+
+```bash
+git status
+```
+
+If it says *not a git repository*, run:
+
+```bash
+git init
+```
+
+---
+
+## ✅ 3. Add all files
+
+```bash
+git add .
+```
+
+---
+
+## ✅ 4. Commit your code
+
+```bash
+git commit -m "Initial commit - SAP BTP project"
+```
+
+---
+
+## ✅ 5. Connect to your remote repo
+
+Copy your repo URL (from GitHub / GitLab / Bitbucket), then run:
+
+```bash
+git remote add origin <your-repo-url>
+```
+
+Example:
+
+```bash
+git remote add origin https://github.com/your-username/API_TESTING.git
+```
+
+---
+
+## ✅ 6. Push to repo
+
+If it's your first push:
+
+```bash
+git branch -M main
+git push -u origin main
+```
+
+---
+
+## ⚠️ Common issues (important)
+
+### 🔸 1. node_modules should NOT be pushed
+
+Create a `.gitignore` file:
+
+```bash
+touch .gitignore
+```
+
+Add this:
+
+```
+node_modules/
+gen/
+.env
+```
+
+Then re-add:
+
+```bash
+git rm -r --cached node_modules
+git add .
+git commit -m "Added .gitignore"
+```
+
+---
+
+### 🔸 2. Authentication error
+
+If Git asks for password:
+
+* Use a **Personal Access Token (PAT)** instead of password (for GitHub)
+
+---
+
+### 🔸 3. Repo already has code
+
+If your remote repo is not empty:
+
+```bash
+git pull origin main --rebase
+git push origin main
+```
+
+---
+
+## ✅ Done 🎉
+
+Your SAP project (`app`, `db`, `srv`, etc.) will now be in your Git repo.
+
+---
+
+
+
+note :
+
+
+if you get error :::::::::
+
+user: API_TESTING $ npm run dev
+npm error Missing script: "dev"
+npm error
+npm error To see a list of scripts, run:
+npm error   npm run
+npm error A complete log of this run can be found in: /home/user/.npm/_logs/2026-04-04T05_22_05_286Z-debug-0.log
+
+
+
+do as bellow 
+
+
+
+✅ Step 1: Check available scripts
+
+Run:
+
+npm run
+
+You’ll see something like:
+
+"scripts": {
+  "start": "cds run"
+}
+✅ Step 2: Run your CAP app
+
+For SAP CAP projects, the correct command is usually:
+
+npx cds watch
+
+OR
+
+cds watch
+💡 What this does
+Starts your CAP server
+Watches for file changes
+Auto-reloads (like dev mode)
+✅ Alternative
+
+If your package.json has:
+
+"start": "cds run"
+
+Then run:
+
+npm start
+🔧 Optional (Add your own dev script)
+
+If you want npm run dev, add this in package.json:
+
+"scripts": {
+  "dev": "cds watch"
+}
+
+Then it will work:
+
+npm run dev
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+const XLSX = require('xlsx');
+const axios = require('axios');
+
+module.exports = {
+
+    run: async function (req) {
+
+        try {
+            console.log("API Testing Started");
+
+            const file = req._.req.file;
+            const buffer = file.buffer;
+            const { clientId, clientSecret, tokenUrl } = req._.req.body;
+
+            const workbook = XLSX.read(buffer, { type: 'buffer' });
+
+            // Get Token
+            const tokenRes = await axios.post(tokenUrl,
+                `grant_type=client_credentials&client_id=${clientId}&client_secret=${clientSecret}`,
+                { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } }
+            );
+
+            const token = tokenRes.data.access_token;
+
+            let allSheetResults = [];
+
+            for (let sheetName of workbook.SheetNames) {
+                console.log(`Running Sheet: ${sheetName}`);
+
+                const sheet = workbook.Sheets[sheetName];
+                const testCases = XLSX.utils.sheet_to_json(sheet, { defval: "" });
+
+                let results = [];
+
+                for (let test of testCases) {
+
+                    if ((test["Skip?"] || "").toString().toLowerCase() === "yes") continue;
+
+                    const method = (test.Method || "GET").toUpperCase();
+                    const shouldVaryPayload = (test.AutoPayloadVariations || "").toString().toLowerCase() === "yes";
+
+                    // Only do payload variations for POST/PUT/PATCH
+                    const isMutableMethod = ["POST", "PUT", "PATCH"].includes(method);
+
+                    let basePayload = null;
+                    if (test.Payload && test.Payload !== "NA") {
+                        try {
+                            basePayload = JSON.parse(test.Payload);
+                        } catch (e) {
+                            console.log(`Invalid JSON in Payload for test: ${test.TestName}`);
+                        }
+                    }
+
+                    // Generate list of payloads to test
+                    let payloadsToTest = [];
+
+                    if (basePayload && isMutableMethod && shouldVaryPayload) {
+                        payloadsToTest = [
+                            basePayload,                    // 1. Original (yours)
+                            generateVariation1(basePayload), // 2. Missing field
+                            generateVariation2(basePayload), // 3. Wrong data type
+                            generateVariation3(basePayload)  // 4. Extra field
+                        ];
+                    } else {
+                        payloadsToTest = [basePayload];     // Only original
+                    }
+
+                    // Run each payload version
+                    for (let i = 0; i < payloadsToTest.length; i++) {
+                        const currentPayload = payloadsToTest[i];
+                        const variationName = i === 0 ? "Original" : `Variation-${i}`;
+
+                        try {
+                            let headers = {
+                                Authorization: `Bearer ${token}`,
+                                'Content-Type': 'application/json'
+                            };
+
+                            // Custom Headers from Excel
+                            if (test.Headers && test.Headers !== "NA") {
+                                test.Headers.split(";").forEach(h => {
+                                    const [k, v] = h.split(":");
+                                    if (k && v) headers[k.trim()] = v.trim();
+                                });
+                            }
+
+                            const config = {
+                                method: method,
+                                url: test.URL,
+                                headers,
+                                timeout: 20000
+                            };
+
+                            if (currentPayload && method !== "GET") {
+                                config.data = currentPayload;
+                            }
+
+                            const start = Date.now();
+                            const response = await axios(config);
+                            const time = Date.now() - start;
+
+                            let isPass = response.status === Number(test.ExpectedStatus);
+
+                            if (isPass && test.ExpectedResponseContains && test.ExpectedResponseContains !== "NA") {
+                                isPass = JSON.stringify(response.data).includes(test.ExpectedResponseContains);
+                            }
+
+                            results.push({
+                                testName: `${test.TestName || "Test"} (${variationName})`,
+                                method: method,
+                                status: isPass ? "PASS" : "FAIL",
+                                actual: response.status,
+                                expected: test.ExpectedStatus,
+                                time: time,
+                                responseData: JSON.stringify(response.data)
+                            });
+
+                        } catch (err) {
+                            results.push({
+                                testName: `${test.TestName || "Test"} (${variationName})`,
+                                method: method,
+                                status: "ERROR",
+                                actual: err.response?.status || err.message,
+                                expected: test.ExpectedStatus,
+                                time: "-",
+                                responseData: err.response?.data 
+                                    ? JSON.stringify(err.response.data).substring(0, 300) 
+                                    : err.message
+                            });
+                        }
+                    }
+                }
+
+                allSheetResults.push({
+                    sheetName,
+                    total: results.length,
+                    passed: results.filter(r => r.status === "PASS").length,
+                    failed: results.filter(r => r.status === "FAIL").length,
+                    errors: results.filter(r => r.status === "ERROR").length,
+                    results
+                });
+            }
+
+            return { sheets: allSheetResults };
+
+        } catch (err) {
+            console.error(err);
+            return { error: err.message };
+        }
+    }
+};
+
+// ==================== Helper Functions for Payload Variations ====================
+
+function generateVariation1(payload) { // Missing one field
+    const copy = JSON.parse(JSON.stringify(payload));
+    const keys = Object.keys(copy);
+    if (keys.length > 0) {
+        const randomKey = keys[Math.floor(Math.random() * keys.length)];
+        delete copy[randomKey];
+    }
+    return copy;
+}
+
+function generateVariation2(payload) { // Wrong data type
+    const copy = JSON.parse(JSON.stringify(payload));
+    const keys = Object.keys(copy);
+    if (keys.length > 0) {
+        const randomKey = keys[Math.floor(Math.random() * keys.length)];
+        const currentValue = copy[randomKey];
+
+        if (typeof currentValue === "number") copy[randomKey] = "invalid_string";
+        else if (typeof currentValue === "string") copy[randomKey] = 999999;
+        else if (typeof currentValue === "boolean") copy[randomKey] = "not_boolean";
+        else copy[randomKey] = "modified_value";
+    }
+    return copy;
+}
+
+function generateVariation3(payload) { // Extra field
+    const copy = JSON.parse(JSON.stringify(payload));
+    copy.extraTestField = "This_is_an_extra_field_for_testing";
+    copy.extraNumber = 12345;
+    return copy;
+}
+
+
+
+
+for random string 
+and add one more column in excel AutoPayloadVariations
+with yes and Leave it blank for normal behavior 
