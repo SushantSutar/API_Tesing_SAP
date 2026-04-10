@@ -1,0 +1,14 @@
+{
+  "name": "approuter",
+  "version": "1.0.0",
+  "description": "SAP Approuter for API_TESTING",
+  "dependencies": {
+    "@sap/approuter": "^16"
+  },
+  "engines": {
+    "node": "^18.0.0 || ^20.0.0 || ^22.0.0"
+  },
+  "scripts": {
+    "start": "node node_modules/@sap/approuter/approuter.js"
+  }
+}
