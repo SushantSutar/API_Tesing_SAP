@@ -1,10 +1,17 @@
+const RUN_TESTS_API_URL =
+    'https://37ecf082trial-dev-api-testing-srv.cfapps.us10-001.hana.ondemand.com/api/runTests';
+
 let latestResults = [];
 let currentSheetIndex = 0;
+let runTestsInProgress = false;
 
 // ─── MAIN ENTRY ──────────────────────────────────────────────────────────────
 async function runTests() {
+    if (runTestsInProgress) return;
+
     const file = document.getElementById('file').files[0];
     const progressBar = document.getElementById('progressBar');
+    const runBtn = document.getElementById('runTestsBtn');
 
     if (!file) { alert("Please upload an Excel file"); return; }
 
@@ -17,6 +24,9 @@ async function runTests() {
         return;
     }
 
+    runTestsInProgress = true;
+    if (runBtn) runBtn.disabled = true;
+
     progressBar.style.width = "10%";
 
     // ── Step 1: Read Excel in browser ────────────────────────────────────────
@@ -26,6 +36,8 @@ async function runTests() {
     } catch (e) {
         alert("Failed to read Excel: " + e.message);
         progressBar.style.width = "0%";
+        runTestsInProgress = false;
+        if (runBtn) runBtn.disabled = false;
         return;
     }
 
@@ -55,14 +67,34 @@ async function runTests() {
 
     // ── Step 4: Single POST to backend ───────────────────────────────────────
     try {
-        const res = await fetch('/api/runTests', {
+        const res = await fetch(RUN_TESTS_API_URL, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(batchPayload)
         });
 
         progressBar.style.width = "80%";
-        const data = await res.json();
+        const text = await res.text();
+        let data = {};
+        try {
+            data = text ? JSON.parse(text) : {};
+        } catch {
+            if (!res.ok) {
+                alert(`Run Tests failed (HTTP ${res.status}): ${text ? text.substring(0, 600) : 'Empty body'}`);
+                progressBar.style.width = "0%";
+                return;
+            }
+            alert('Invalid JSON from server: ' + (text || '').substring(0, 400));
+            progressBar.style.width = "0%";
+            return;
+        }
+
+        if (!res.ok) {
+            const msg = data.error || data.message || data.detail || text.substring(0, 600);
+            alert(`Run Tests failed (HTTP ${res.status}): ${msg}`);
+            progressBar.style.width = "0%";
+            return;
+        }
 
         if (data.error) {
             alert("Backend Error: " + data.error);
@@ -82,6 +114,9 @@ async function runTests() {
     } catch (err) {
         alert("Connection failed: " + err.message);
         progressBar.style.width = "0%";
+    } finally {
+        runTestsInProgress = false;
+        if (runBtn) runBtn.disabled = false;
     }
 }
 
@@ -217,11 +252,12 @@ function renderTable(sheetIndex) {
                 </thead>
                 <tbody>`;
 
-    sheet.results.forEach(r => {
+    sheet.results.forEach((r, rowIdx) => {
         const statusClass = r.status === 'PASS' ? 'pass-text' :
                             r.status === 'FAIL' ? 'fail-text' : 'error-text';
-        const respBtn = (r.responseData && r.responseData !== "-")
-            ? `<button class="response-btn" onclick='showResponse(${JSON.stringify(r.responseData)})'>View</button>`
+        const hasResp = hasViewableResponse(r);
+        const respBtn = hasResp
+            ? `<button type="button" class="response-btn" onclick="showResponseForResult(${sheetIndex}, ${rowIdx})">View</button>`
             : '-';
         html += `
             <tr>
@@ -237,6 +273,32 @@ function renderTable(sheetIndex) {
 
     html += `</tbody></table></div>`;
     document.getElementById("report").innerHTML = html;
+}
+
+function hasViewableResponse(r) {
+    if (!r) return false;
+    if (r.responseData !== undefined && r.responseData !== null && r.responseData !== '' && r.responseData !== '-') return true;
+    if (r.errorMessage) return true;
+    return false;
+}
+
+/** Safe for any characters — avoids broken onclick when response/error text contains quotes. */
+function showResponseForResult(sheetIndex, rowIndex) {
+    const sheet = latestResults[sheetIndex];
+    const r = sheet && sheet.results[rowIndex];
+    if (!r) {
+        alert('No result data for this row.');
+        return;
+    }
+    const parts = [];
+    if (r.responseData !== undefined && r.responseData !== null && r.responseData !== '') {
+        parts.push(typeof r.responseData === 'string' ? r.responseData : JSON.stringify(r.responseData, null, 2));
+    }
+    if (r.errorMessage) {
+        parts.push('Error: ' + r.errorMessage);
+    }
+    const text = parts.length ? parts.join('\n\n---\n\n') : '(No response body stored for this test.)';
+    showResponse(text);
 }
 
 function showResponse(data) {

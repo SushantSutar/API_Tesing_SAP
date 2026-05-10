@@ -182,16 +182,21 @@ module.exports = {
                         });
 
                     } catch (err) {
+                        let responseData = err.message;
+                        if (err.response?.data !== undefined && err.response?.data !== '') {
+                            const d = err.response.data;
+                            responseData = typeof d === 'string' ? d : JSON.stringify(d);
+                            if (responseData.length > 2000) responseData = responseData.substring(0, 2000) + '…';
+                        }
                         results.push({
                             testName:     test.TestName,
                             method:       methodUpper,
                             status:       "ERROR",
-                            actual:       err.response?.status || err.message,
+                            actual:       err.response?.status ?? err.message,
                             expected:     test.ExpectedStatus,
                             time:         "-",
-                            responseData: err.response?.data
-                                ? JSON.stringify(err.response.data).substring(0, 500)
-                                : err.message
+                            responseData,
+                            errorMessage: err.message
                         });
                     }
                 }

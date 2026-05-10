@@ -402,3 +402,35 @@ function generateVariation3(payload) { // Extra field
 for random string 
 and add one more column in excel AutoPayloadVariations
 with yes and Leave it blank for normal behavior 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+//-----------------------------------------------------------------------------------------------
+to test in postman 
+URL - https://37ecf082trial-dev-api-testing-srv.cfapps.us10-001.hana.ondemand.com/api/runTests
+
+and pzylode from paylode.json
+to test in cmd downlode paylode.json and rem belllow command 
+
+Invoke-RestMethod `
+  -Uri "https://37ecf082trial-dev-api-testing-srv.cfapps.us10-001.hana.ondemand.com/api/runTests" `
+  -Method POST `
+  -ContentType "application/json" `
+  -Body (Get-Content "C:\Users\Dell\payload.json" -Raw)
