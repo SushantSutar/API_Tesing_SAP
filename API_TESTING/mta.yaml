@@ -21,38 +21,26 @@ modules:
     build-parameters:
       builder: npm-ci
     provides:
-      - name: srv-api # required by consumers of CAP services (e.g. approuter)
+      - name: srv-api
         properties:
           srv-url: ${default-url}
     requires:
       - name: API_TESTING-auth
-      - name: API_TESTING-db
-
-  - name: API_TESTING-db-deployer
-    type: hdb
-    path: db #gen/db
-    parameters:
-      buildpack: nodejs_buildpack
-      memory: 100M
-    requires:
-      - name: API_TESTING-db
 
 resources:
   - name: API_TESTING-auth
     type: org.cloudfoundry.managed-service
+
     parameters:
       service: xsuaa
       service-plan: application
       path: ./xs-security.json
+
       config:
         xsappname: API_TESTING-${org}-${space}
         tenant-mode: dedicated
+
         oauth2-configuration:
           credential-types:
-            - "binding-secret"
-            - "x509"
-  - name: API_TESTING-db
-    type: com.sap.xs.hdi-container
-    parameters:
-      service: hana
-      service-plan: hdi-shared
+            - binding-secret
+            - x509
