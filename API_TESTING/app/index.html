@@ -17,11 +17,20 @@
       <input type="text" id="clientSecret" placeholder="Client Secret" />
       <input type="text" id="tokenUrl" placeholder="Token URL" />
     </div>
+    <div class="toggle-row">
+      <label class="toggle">
+        <input type="checkbox" id="payloadManipulationToggle" />
+        <span class="toggle-slider"></span>
+        <span class="toggle-text">Enable payload manipulation for POST requests</span>
+      </label>
+      <p class="toggle-help">When enabled, Run Tests first shows all POST payloads below so testers can edit them before execution.</p>
+    </div>
     <button type="button" id="runTestsBtn" onclick="runTests()" class="btn-primary">Run Tests</button>
     <div class="progress">
       <div class="progress-bar" id="progressBar"></div>
     </div>
   </div>
+  <div id="payloadEditor"></div>
   <div id="overallSummary"></div>
   <div id="sheetTabs"></div>
   <div id="report"></div>

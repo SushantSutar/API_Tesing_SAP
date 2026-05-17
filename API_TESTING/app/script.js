@@ -4,6 +4,8 @@ const RUN_TESTS_API_URL =
 let latestResults = [];
 let currentSheetIndex = 0;
 let runTestsInProgress = false;
+let pendingPayloadSheets = null;
+let pendingPayloadAuth = null;
 
 // ─── MAIN ENTRY ──────────────────────────────────────────────────────────────
 async function runTests() {
@@ -18,6 +20,7 @@ async function runTests() {
     const clientId     = document.getElementById('clientId').value.trim();
     const clientSecret = document.getElementById('clientSecret').value.trim();
     const tokenUrl     = document.getElementById('tokenUrl').value.trim();
+    const payloadManipulationEnabled = document.getElementById('payloadManipulationToggle')?.checked === true;
 
     if (!clientId || !clientSecret || !tokenUrl) {
         alert("Please fill all authentication fields");
@@ -43,25 +46,73 @@ async function runTests() {
 
     progressBar.style.width = "30%";
 
-    // ── Step 2: Wrap each test payload into D4OXYPALUYAIDNSO envelope ────────
-    sheetsPayload = sheetsPayload.map(sheet => {
-        const tests = sheet.tests.map(test => ({
-            ...test,
-            Payload: buildPayloadEnvelope(test.Payload)
-        }));
-        return { ...sheet, tests };
+    if (payloadManipulationEnabled) {
+        pendingPayloadSheets = sheetsPayload;
+        pendingPayloadAuth = { clientId, clientSecret, tokenUrl };
+
+        const postPayloadCount = renderPayloadEditor(sheetsPayload);
+        runTestsInProgress = false;
+        if (runBtn) runBtn.disabled = false;
+        progressBar.style.width = "0%";
+
+        if (postPayloadCount === 0) {
+            alert("No POST payloads found in the uploaded Excel file.");
+        }
+        return;
+    }
+
+    await submitBatch({
+        clientId,
+        clientSecret,
+        tokenUrl,
+        payloadManipulationEnabled: false,
+        sheets: sheetsPayload
     });
+}
+
+async function submitManipulatedPayloads() {
+    if (runTestsInProgress) return;
+    if (!pendingPayloadSheets || !pendingPayloadAuth) {
+        alert("Please upload Excel and click Run Tests first.");
+        return;
+    }
+
+    const editedSheets = cloneJson(pendingPayloadSheets);
+    const editors = document.querySelectorAll('[data-payload-editor="true"]');
+
+    for (const editor of editors) {
+        const sheetIndex = Number(editor.dataset.sheetIndex);
+        const testIndex = Number(editor.dataset.testIndex);
+        const text = editor.value.trim();
+
+        try {
+            editedSheets[sheetIndex].tests[testIndex].Payload = text ? JSON.parse(text) : null;
+        } catch (e) {
+            alert(`Invalid JSON in ${editor.dataset.testName}: ${e.message}`);
+            editor.focus();
+            return;
+        }
+    }
+
+    await submitBatch({
+        ...pendingPayloadAuth,
+        payloadManipulationEnabled: true,
+        sheets: editedSheets
+    });
+}
+
+async function submitBatch(batchPayload) {
+    const progressBar = document.getElementById('progressBar');
+    const runBtn = document.getElementById('runTestsBtn');
+    const submitBtn = document.getElementById('submitManipulatedPayloadsBtn');
+
+    runTestsInProgress = true;
+    if (runBtn) runBtn.disabled = true;
+    if (submitBtn) submitBtn.disabled = true;
 
     progressBar.style.width = "50%";
 
     // ── Step 3: Build final batch body ───────────────────────────────────────
-    const batchPayload = {
-        clientId,
-        clientSecret,
-        tokenUrl,
-        sheets: sheetsPayload
-    };
-
     console.log("=== Batch payload being sent ===");
     console.log(JSON.stringify(batchPayload, null, 2));
 
@@ -104,6 +155,9 @@ async function runTests() {
 
         latestResults = data.sheets || [];
         progressBar.style.width = "100%";
+        pendingPayloadSheets = null;
+        pendingPayloadAuth = null;
+        clearPayloadEditor();
 
         setTimeout(() => {
             renderOverallSummary();
@@ -117,54 +171,132 @@ async function runTests() {
     } finally {
         runTestsInProgress = false;
         if (runBtn) runBtn.disabled = false;
+        if (submitBtn) submitBtn.disabled = false;
     }
 }
 
-// ─── BUILD D4OXYPALUYAIDNSO ENVELOPE ─────────────────────────────────────────
-//
-// Rules:
-//  1. null / "" / "NA"          → return null (no payload)
-//  2. Already has D4OXYPALUYAIDNSO key  → use AS-IS, no double-wrap
-//  3. Plain JSON object/string  → wrap: { D4OXYPALUYAIDNSO: "<stringified>" }
-//
-// Excel examples and what gets sent to backend:
-//
-//  Excel value (string):  {"GRVID":68,"ROLL":"UNION"}
-//  Sent:                  { "D4OXYPALUYAIDNSO": "{\"GRVID\":68,\"ROLL\":\"UNION\"}" }
-//
-//  Excel value (already wrapped):  {"D4OXYPALUYAIDNSO":"U2FsdGVk..."}
-//  Sent:                           { "D4OXYPALUYAIDNSO": "U2FsdGVk..." }  ← no double wrap
-//
-function buildPayloadEnvelope(rawPayload) {
-    // ── Case 1: empty / NA ────────────────────────────────────────────────────
-    if (rawPayload === null || rawPayload === undefined) return null;
-    if (typeof rawPayload === 'string' && (rawPayload.trim() === '' || rawPayload.trim() === 'NA')) return null;
+function renderPayloadEditor(sheetsPayload) {
+    const payloadEditor = document.getElementById('payloadEditor');
+    if (!payloadEditor) return 0;
 
-    // ── Normalise to object if it's still a string ────────────────────────────
-    let payloadObj;
-    if (typeof rawPayload === 'string') {
-        try {
-            payloadObj = JSON.parse(rawPayload);
-        } catch (e) {
-            // Not valid JSON — wrap the raw string as-is (pre-encrypted maybe)
-            console.warn("Payload is not valid JSON, wrapping as-is:", rawPayload);
-            return { D4OXYPALUYAIDNSO: rawPayload };
+    const editors = [];
+    sheetsPayload.forEach((sheet, sheetIndex) => {
+        sheet.tests.forEach((test, testIndex) => {
+            const methodUpper = (test.Method || "GET").toUpperCase();
+            if (methodUpper !== "POST" || (test["Skip?"] || "").toLowerCase() === "yes") return;
+
+            editors.push({
+                sheetIndex,
+                testIndex,
+                sheetName: sheet.sheetName || `Sheet ${sheetIndex + 1}`,
+                testName: test.TestName || `Test ${testIndex + 1}`,
+                url: test.URL || '-',
+                payloadText: prettyEditablePayload(test.Payload)
+            });
+        });
+    });
+
+    if (!editors.length) {
+        payloadEditor.innerHTML = "";
+        return 0;
+    }
+
+    let html = `
+        <div class="card">
+            <div class="payload-editor-header">
+                <div>
+                    <h3>Review and Manipulate POST Payloads</h3>
+                    <p class="toggle-help">Edit the JSON payloads below, then click Run With Edited Payloads.</p>
+                </div>
+                <strong>${editors.length} POST payload(s)</strong>
+            </div>`;
+
+    editors.forEach(editor => {
+        html += `
+            <div class="payload-editor-item">
+                <div class="payload-editor-title">
+                    <span>${escapeHtml(editor.sheetName)} / ${escapeHtml(editor.testName)}</span>
+                    <span>POST</span>
+                </div>
+                <div class="payload-url">${escapeHtml(editor.url)}</div>
+                <textarea
+                    class="payload-textarea"
+                    data-payload-editor="true"
+                    data-sheet-index="${editor.sheetIndex}"
+                    data-test-index="${editor.testIndex}"
+                    data-test-name="${escapeHtml(editor.testName)}">${escapeHtml(editor.payloadText)}</textarea>
+            </div>`;
+    });
+
+    html += `
+            <div class="payload-actions">
+                <button type="button" id="submitManipulatedPayloadsBtn" class="btn-primary" onclick="submitManipulatedPayloads()">Run With Edited Payloads</button>
+                <button type="button" class="btn-info" onclick="cancelPayloadEditing()">Cancel Payload Editing</button>
+            </div>
+        </div>`;
+
+    payloadEditor.innerHTML = html;
+    payloadEditor.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    return editors.length;
+}
+
+function cancelPayloadEditing() {
+    pendingPayloadSheets = null;
+    pendingPayloadAuth = null;
+    clearPayloadEditor();
+}
+
+function clearPayloadEditor() {
+    const payloadEditor = document.getElementById('payloadEditor');
+    if (payloadEditor) payloadEditor.innerHTML = "";
+}
+
+function prettyEditablePayload(rawPayload) {
+    if (isEmptyPayloadValue(rawPayload)) return "";
+
+    const payloadObj = parseJsonIfPossibleClient(rawPayload);
+    if (
+        payloadObj &&
+        typeof payloadObj === 'object' &&
+        Object.prototype.hasOwnProperty.call(payloadObj, 'D4OXYPALUYAIDNSO')
+    ) {
+        const innerPayload = parseJsonIfPossibleClient(payloadObj.D4OXYPALUYAIDNSO);
+        if (innerPayload && typeof innerPayload === 'object') {
+            return JSON.stringify(innerPayload, null, 2);
         }
-    } else {
-        // SheetJS already parsed it into an object
-        payloadObj = rawPayload;
     }
 
-    // ── Case 2: already has D4OXYPALUYAIDNSO → use as-is, no double-wrap ─────
-    if (payloadObj.hasOwnProperty('D4OXYPALUYAIDNSO')) {
-        console.log("Payload already has D4OXYPALUYAIDNSO key — sending as-is");
-        return payloadObj;  // { D4OXYPALUYAIDNSO: "encrypted-or-stringified-value" }
-    }
+    return typeof payloadObj === 'string'
+        ? JSON.stringify(payloadObj, null, 2)
+        : JSON.stringify(payloadObj, null, 2);
+}
 
-    // ── Case 3: plain object → stringify and wrap ─────────────────────────────
-    return {
-        D4OXYPALUYAIDNSO: JSON.stringify(payloadObj)
-    };
+function parseJsonIfPossibleClient(value) {
+    if (typeof value !== 'string') return value;
+
+    try {
+        return JSON.parse(value);
+    } catch (e) {
+        return value;
+    }
+}
+
+function isEmptyPayloadValue(value) {
+    if (value === null || value === undefined) return true;
+    return typeof value === 'string' && (value.trim() === '' || value.trim().toUpperCase() === 'NA');
+}
+
+function cloneJson(value) {
+    return JSON.parse(JSON.stringify(value));
+}
+
+function escapeHtml(value) {
+    return String(value)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
 }
 
 // ─── READ EXCEL → JSON (browser-side SheetJS) ────────────────────────────────
